@@ -71,7 +71,8 @@ def inline_master_pressed(bot, update, user_data):
     query = update.callback_query
     name = query.data
     if name == query.data:
-        print(name)
+        global c
+        c = query.data
         for masters in data_base:
             if name in masters:
                 a = masters[0]
@@ -82,7 +83,6 @@ def inline_master_pressed(bot, update, user_data):
                             if b in service_id:
                                 all_services = []
                                 all_services.append(service_id[2])
-                                # print(all_services)
                                 keyboard = []
                                 row = []
                                 for i in all_services:
@@ -92,10 +92,9 @@ def inline_master_pressed(bot, update, user_data):
                                 bot.send_message(chat_id=update.callback_query.from_user.id,
                                             text="Выберите услугу: ", 
                                             reply_markup=reply_markup)
-
-                                service = update.callback_query
-                                service_1 = service.data
-                                # print(service_1)
+                                global d
+                                d = query.data
+    
     sql_3 = "SELECT service_name FROM table_services"
     cursor.execute(sql_3)
     data_base_3 = cursor.fetchall()
@@ -104,6 +103,8 @@ def inline_master_pressed(bot, update, user_data):
                 bot.send_message(chat_id=update.callback_query.from_user.id,
                                 text="Выберите дату: ", 
                                 reply_markup=telegramcalendar.create_calendar())
+                global e
+                e = query.data
 
     selected,date = telegramcalendar.process_calendar_selection(bot, update)
     if selected:
@@ -117,6 +118,9 @@ def inline_master_pressed(bot, update, user_data):
         bot.send_message(chat_id=update.callback_query.from_user.id,
                         text="Вы выбрали дату: %s. Выберите удобное для Вас время: " % (date.strftime("%d/%m/%Y")), 
                         reply_markup=reply_markup)
+        global p
+        p = query.data
+        print(c,d,e,p)
 
     if len(query.data) > 0:
         query = update.callback_query
@@ -126,6 +130,7 @@ def inline_master_pressed(bot, update, user_data):
                         text="Отправьте ваши контакты для уточнения заказа", 
                         reply_markup=reply_markup) 
         print(update.message.contact)
+
 
     # data = update.callback_query
     # data_1 = query.data
