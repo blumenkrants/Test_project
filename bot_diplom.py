@@ -1,4 +1,4 @@
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, RegexHandler, CallbackQueryHandler
 
@@ -70,6 +70,7 @@ def inline_master_pressed(bot, update, user_data):
     counter = []
     query = update.callback_query
     name = query.data
+    # print(name)
     if name == query.data:
         global c
         c = query.data
@@ -120,16 +121,31 @@ def inline_master_pressed(bot, update, user_data):
                         reply_markup=reply_markup)
         global p
         p = query.data
-        print(c,d,e,p)
+        print(d,e,c,p)
+    # print(len(c))
 
-    if len(query.data) > 0:
-        query = update.callback_query
-        contact_keyboard = KeyboardButton(text="Отправить контакты",request_contact=True) 
-        reply_markup = ReplyKeyboardMarkup([[contact_keyboard]]) 
-        bot.send_message(chat_id=update.callback_query.from_user.id, 
-                        text="Отправьте ваши контакты для уточнения заказа", 
-                        reply_markup=reply_markup) 
-        print(update.message.contact)
+    if len(query.data)==13:
+        contact_button = KeyboardButton('Контактные данные', request_contact=True)
+        my_keyboard = ReplyKeyboardMarkup([[contact_button]],
+                                          resize_keyboard=True, 
+                                          one_time_keyboard=True)
+        bot.send_message(chat_id=update.callback_query.from_user.id,
+                        text="Отправьте Ваши контактные данные для уточнения заказа:", 
+                        reply_markup=my_keyboard)
+        # print(update.message.contact)
+
+
+    #     print(update.message.contact)
+    #     global p
+    #     p = query.data
+    # print(c,d,e,p)
+        # query = update.callback_query
+        # contact_keyboard = KeyboardButton(text="Отправить контакты",request_contact=True) 
+        # reply_markup = ReplyKeyboardMarkup([['lol']]) 
+        # bot.send_message(chat_id=update.callback_query.from_user.id, 
+        #                 text="Отправьте ваши контакты для уточнения заказа", 
+        #                 reply_markup=reply_markup) 
+        # print(update.message.contact)
 
 
     # data = update.callback_query
@@ -221,8 +237,11 @@ def main():
 
     dp.add_handler(CommandHandler("О нас", press_button4))
     dp.add_handler(RegexHandler("О нас", press_button4))
+
+    dp.add_handler(CommandHandler('lol', get_contact))
+    dp.add_handler(RegexHandler('lol', get_contact))
              
-    dp.add_handler(MessageHandler(Filters.contact, get_contact, pass_user_data=True))
+    dp.add_handler(MessageHandler(Filters.contact, get_contact))
     dp.add_handler(MessageHandler(Filters.text, talk_to_me))
 
     mybot.start_polling()
