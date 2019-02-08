@@ -14,10 +14,14 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
                     filename='bot.log')
 
+
+# Ответ на любой текст
 def talk_to_me(bot, update):
     user_text = update.message.text 
     update.message.reply_text('Нажмите /start чтобы записаться на услуги салона') 
 
+
+# /start
 def greet_user(bot, update):
   text = 'Приносим свои извинения! Бот находится в стадии разработки!'
   my_keyboard = ReplyKeyboardMarkup([['Записаться на услугу'],
@@ -26,7 +30,8 @@ def greet_user(bot, update):
                                    one_time_keyboard=True)
   update.message.reply_text(text, reply_markup=my_keyboard)
 
-# инлайн клавиатура c именами
+
+# Инлайн клавиатура с мастерами
 def inline_master(bot,update, user_data):
     conn = sqlite3.connect('mydatabase.db')
     cursor = conn.cursor()
@@ -47,11 +52,13 @@ def inline_master(bot,update, user_data):
                     photo=open('/Users/dmitriy/Downloads/barber.jpg', 'rb'))
     update.message.reply_text('Выберите мастера:', reply_markup=reply_markup)
 
+# Обработчик контактов
 def get_contact(bot, update, user_data):
     print(update.message.contact)
     update.message.reply_text('Спасибо')
 
-# Клавиатура с услугами
+
+# Инлайн клавиатуры
 def inline_master_pressed(bot, update, user_data):
     conn = sqlite3.connect('mydatabase.db')
     cursor = conn.cursor()
@@ -180,12 +187,18 @@ def inline_master_pressed(bot, update, user_data):
 #                                    resize_keyboard=True))
 
 
-
 # Кнопка о компании
 def press_button4(bot, update, user_data):
     my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]], 
                                         resize_keyboard=True)
-    update.message.reply_text("Здесь можно будет узнать о компании", 
+    bot.send_photo(chat_id=update.message.chat.id,
+                   photo=open('/Users/dmitriy/Downloads/mapbrb.jpg', 'rb'))
+    update.message.reply_text("Наши контакты: \n "
+                              "Адрес: г.Москва, ул.Большая Ордынка 17 стр.1 \n"
+                              " Телефон: +74951234567 \n"
+                              " Часы работы: \n "
+                              "Будни: с 10:00 до 22:00 \n"
+                              " Выходные: c 12:00 до 22:00",
                               reply_markup=my_keyboard_2)
 
 
@@ -193,10 +206,10 @@ def press_button4(bot, update, user_data):
 def info(bot, update, user_data):
     my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]], 
                                         resize_keyboard=True)
-    update.message.reply_text("Имя мастера: " + user_data.get('name') + 
-                                "; Услуга: " + user_data.get('service') +
-                                "; Дата: " + user_data.get('date') +
-                                "; Время: " + user_data.get('time'))
+    update.message.reply_text("Имя мастера: " + user_data.get('name') + "\n"
+                                "Услуга: " + user_data.get('service') + "\n"
+                                "Дата: " + user_data.get('date') + "\n"
+                                "Время: " + user_data.get('time'))
 
 def main():
     mybot = Updater("728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo", request_kwargs=PROXY)
