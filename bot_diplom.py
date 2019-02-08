@@ -16,7 +16,7 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
 
 def talk_to_me(bot, update):
     user_text = update.message.text 
-    update.message.reply_text('Приносим свои извинения! Бот находится в стадии разработки!')
+    update.message.reply_text('Нажмите /start чтобы записаться на услуги салона') 
 
 def greet_user(bot, update):
   text = 'Приносим свои извинения! Бот находится в стадии разработки!'
@@ -45,7 +45,7 @@ def inline_master(bot,update, user_data):
     reply_markup = InlineKeyboardMarkup(keyboard)
     bot.send_photo(chat_id=update.message.chat.id,
                     photo=open('/Users/dmitriy/Downloads/barber.jpg', 'rb'))
-    update.message.reply_text('Выберите мастера', reply_markup=reply_markup)
+    update.message.reply_text('Выберите мастера:', reply_markup=reply_markup)
 
 def get_contact(bot, update, user_data):
     print(update.message.contact)
@@ -152,35 +152,6 @@ def inline_master_pressed(bot, update, user_data):
     user_data ['date'] = date.strftime("%d/%m/%Y")
     user_data ['service'] = e
 
-                        
-
-
-
-
-    # date = update.callback_query
-    # date_1 = query.data
-    # print(date_1)
-    # Удаление сообщений
-    # bot.delete_message(message.chat.id, message.message_id)
-
-        # a = date.strftime("%d/%m/%Y")
-
-    # conn = sqlite3.connect('mydatabase.db')
-    # cursor = conn.cursor()
-    # clients = [(master1, a)]
-
-    # cursor.executemany("INSERT INTO table_cal_types VALUES (?,?)", clients)
-    # conn.commit()
-
-# conn = sqlite3.connect('mydatabase.db')
-# cursor = conn.cursor()
-# sql = "SELECT * FROM table_cal_types"
-# master1 = "SELECT * FROM table_cal_types WHERE cal_type_id='Мастер Мурад'"
-# cursor.execute(master1)
-# data_base = cursor.fetchone()
-# data_base_1 = data_base[0]
-# print(data_base)
-
 # Календарь
 # def calendar(bot, update):
 #     bot.send_message(chat_id=update.callback_query.from_user.id,
@@ -201,6 +172,8 @@ def press_button4(bot, update, user_data):
     update.message.reply_text("Здесь можно будет узнать о компании", 
                               reply_markup=my_keyboard_2)
 def info(bot, update, user_data):
+    my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]], 
+                                        resize_keyboard=True)
     update.message.reply_text("Имя мастера: " + user_data.get('name') + 
                                 "; Услуга: " + user_data.get('service') +
                                 "; Дата: " + user_data.get('date') +
