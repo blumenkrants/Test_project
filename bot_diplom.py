@@ -70,6 +70,9 @@ def inline_master_pressed(bot, update, user_data):
     counter = []
     query = update.callback_query
     name = query.data
+
+   
+# Запрос контактов
     if len(query.data)==5:
         contact_button = KeyboardButton('Контактные данные', request_contact=True)
         my_keyboard = ReplyKeyboardMarkup([[contact_button]],
@@ -80,6 +83,9 @@ def inline_master_pressed(bot, update, user_data):
                         reply_markup=my_keyboard)
         bot.delete_message(chat_id=update.callback_query.from_user.id,
                         message_id=query.message.message_id)
+
+
+# Запись всех данных в БД
         global p
         p = query.data
         user_data ['time'] = p
@@ -94,6 +100,8 @@ def inline_master_pressed(bot, update, user_data):
         cursor.executemany("INSERT INTO info VALUES (?,?,?,?)", data)
         conn.commit()
 
+
+# Клавиатура с услугами
     counter = []
     for masters in data_base:
         if name in masters:
@@ -121,7 +129,9 @@ def inline_master_pressed(bot, update, user_data):
                         reply_markup=reply_markup)
     global d
     d = query.data
-    
+
+
+# Календарь    
     sql_3 = "SELECT service_name FROM table_services"
     cursor.execute(sql_3)
     data_base_3 = cursor.fetchall()
@@ -134,6 +144,8 @@ def inline_master_pressed(bot, update, user_data):
                 global e
                 e = query.data
 
+
+# Выбор времени
     selected,date = telegramcalendar.process_calendar_selection(bot, update)
     if selected:
         inline_keyboard = [[InlineKeyboardButton('10:00', callback_data ='10:00'),
@@ -148,6 +160,8 @@ def inline_master_pressed(bot, update, user_data):
                             message_id=query.message.message_id, 
                             reply_markup=reply_markup)
 
+
+# Запись данных в user_data 
     user_data ['name'] = c
     user_data ['date'] = date.strftime("%d/%m/%Y")
     user_data ['service'] = e
@@ -165,12 +179,17 @@ def inline_master_pressed(bot, update, user_data):
 #                                    ['12:00', '13:00']],
 #                                    resize_keyboard=True))
 
-# Кнопки
+
+
+# Кнопка о компании
 def press_button4(bot, update, user_data):
     my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]], 
                                         resize_keyboard=True)
     update.message.reply_text("Здесь можно будет узнать о компании", 
                               reply_markup=my_keyboard_2)
+
+
+# Кнопка с информацией пользователя
 def info(bot, update, user_data):
     my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]], 
                                         resize_keyboard=True)
