@@ -82,7 +82,7 @@ def inline_master_pressed(bot, update, user_data):
         p = query.data
         print(p)
 
-    # print(name)
+    counter = []
     if name == query.data:
         global c
         c = query.data
@@ -100,13 +100,15 @@ def inline_master_pressed(bot, update, user_data):
                                 row = []
                                 for i in all_services:
                                     row.append(InlineKeyboardButton(i, callback_data=str(i)))
-                                keyboard.append(row)
-                                reply_markup = InlineKeyboardMarkup(keyboard)
-                                bot.send_message(chat_id=update.callback_query.from_user.id,
-                                            text="Выберите услугу: ", 
-                                            reply_markup=reply_markup)
-                                global d
-                                d = query.data
+                                counter = row + counter
+    list_1 = []
+    list_1.append(counter)
+    reply_markup = InlineKeyboardMarkup(list_1)
+    bot.send_message(chat_id=update.callback_query.from_user.id,
+                text="Выберите услугу: ", 
+                reply_markup=reply_markup)
+    global d
+    d = query.data
     
     sql_3 = "SELECT service_name FROM table_services"
     cursor.execute(sql_3)
