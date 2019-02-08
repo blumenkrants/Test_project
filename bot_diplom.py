@@ -80,33 +80,43 @@ def inline_master_pressed(bot, update, user_data):
                         reply_markup=my_keyboard)
         global p
         p = query.data
-        print(p)
+        user_data ['time'] = p
+        # print(user_data)
+        cort_1 = (user_data.get('name'), )
+        cort_2 = cort_1 + (user_data.get('service'), )
+        cort_3 = cort_2 + (user_data.get('date'), )
+        cort_4 = cort_3 + (user_data.get('time'), )
+        print(cort_4)
+        data = []
+        data.append(cort_4)
+        cursor.executemany("INSERT INTO info VALUES (?,?,?,?)", data)
+        conn.commit()
 
     counter = []
-    if name == query.data:
-        global c
-        c = query.data
-        for masters in data_base:
-            if name in masters:
-                a = masters[0]
-                for master_id in data_base_1:
-                    if a in master_id:
-                        b = master_id[2]
-                        for service_id in data_base_2:
-                            if b in service_id:
-                                all_services = []
-                                all_services.append(service_id[2])
-                                keyboard = []
-                                row = []
-                                for i in all_services:
-                                    row.append(InlineKeyboardButton(i, callback_data=str(i)))
+    for masters in data_base:
+        if name in masters:
+            global c
+            c = query.data
+            a = masters[0]
+            for master_id in data_base_1:
+                if a in master_id:
+                    b = master_id[2]
+                    for service_id in data_base_2:
+                        if b in service_id:
+                            all_services = []
+                            all_services.append(service_id[2])
+                            keyboard = []
+                            row = []
+                            for i in all_services:
+                                row.append(InlineKeyboardButton(i, callback_data=str(i)))
                                 counter = row + counter
     list_1 = []
     list_1.append(counter)
     reply_markup = InlineKeyboardMarkup(list_1)
-    bot.send_message(chat_id=update.callback_query.from_user.id,
-                text="Выберите услугу: ", 
-                reply_markup=reply_markup)
+    bot.edit_message_text(chat_id=update.callback_query.from_user.id,
+                        text="Выберите услугу: ", 
+                        message_id=query.message.message_id,
+                        reply_markup=reply_markup)
     global d
     d = query.data
     
@@ -115,9 +125,10 @@ def inline_master_pressed(bot, update, user_data):
     data_base_3 = cursor.fetchall()
     for z in data_base_3:
         if query.data == z[0]:
-                bot.send_message(chat_id=update.callback_query.from_user.id,
-                                text="Выберите дату: ", 
-                                reply_markup=telegramcalendar.create_calendar())
+                bot.edit_message_text(chat_id=update.callback_query.from_user.id,
+                                    text="Выберите дату: ", 
+                                    message_id=query.message.message_id,
+                                    reply_markup=telegramcalendar.create_calendar())
                 global e
                 e = query.data
 
@@ -130,21 +141,14 @@ def inline_master_pressed(bot, update, user_data):
                             [InlineKeyboardButton('14:00', callback_data ='14:00'),
                             InlineKeyboardButton('15:00', callback_data ='15:00')]]
         reply_markup = InlineKeyboardMarkup(inline_keyboard)
-        bot.send_message(chat_id=update.callback_query.from_user.id,
-                        text="Вы выбрали дату: %s. Выберите удобное для Вас время: " % (date.strftime("%d/%m/%Y")), 
-                        reply_markup=reply_markup)
+        bot.edit_message_text(chat_id=update.callback_query.from_user.id,
+                            text="Вы выбрали дату: %s. Выберите удобное для Вас время: " % (date.strftime("%d/%m/%Y")),
+                            message_id=query.message.message_id, 
+                            reply_markup=reply_markup)
 
-    # a = c + e + d
-    # print(a)
-
-
-    # my_keyboard_1 = ReplyKeyboardMarkup([counter,
-    #                                     ["Вернуться в меню"]],
-    #                                     resize_keyboard=True,
-    #                                     one_time_keyboard=True)
-    # bot.send_message(chat_id=update.callback_query.from_user.id,
-    #                  text="Выберите услугу: ",
-    #                  reply_markup=my_keyboard_1)
+    user_data ['name'] = c
+    user_data ['date'] = date.strftime("%d/%m/%Y")
+    user_data ['service'] = e
 
                         
 
@@ -189,17 +193,22 @@ def inline_master_pressed(bot, update, user_data):
 #                                    resize_keyboard=True))
 
 # Кнопки
-def calendar(bot, update):
-    print('lol')
-    # bot.send_message(chat_id=update.callback_query.from_user.id,
-    #                 text="Вы выбрали дату: ", 
-    #                 reply_markup=telegramcalendar.create_calendar())
-
-def press_button4(bot, update):
+def press_button4(bot, update, user_data):
     my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]], 
                                         resize_keyboard=True)
     update.message.reply_text("Здесь можно будет узнать о компании", 
                               reply_markup=my_keyboard_2)
+def info(bot, update, user_data):
+    conn = sqlite3.connect('mydatabase.db')
+    cursor = conn.cursor()
+    sql = 'SELECT * FROM info'
+    cursor.execute(sql)
+    data_base = cursor.fetchall()
+    print(data_base[0])
+    update.message.reply_text("Имя мастера: " + data_base[0][0] + 
+                                "; Услуга: " + data_base[0][1] +
+                                "; Дата: " + data_base[0][2] +
+                                "; Время: " + data_base[0][3])
 
 def main():
     mybot = Updater("728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo", request_kwargs=PROXY)
@@ -208,9 +217,6 @@ def main():
     dp = mybot.dispatcher
     dp.add_handler(CommandHandler("start", greet_user))
 
-    # dp.add_handler(CommandHandler('Услуга: ', calendar))
-    # dp.add_handler(RegexHandler('Услуга: ', calendar))
-
     dp.add_handler(CommandHandler("Вернуться в меню", greet_user))
     dp.add_handler(RegexHandler("Вернуться в меню", greet_user))
 
@@ -218,11 +224,11 @@ def main():
     dp.add_handler(RegexHandler('Записаться на услугу', inline_master, pass_user_data=True))
     dp.add_handler(CallbackQueryHandler(inline_master_pressed, pass_user_data=True))
 
-    dp.add_handler(CommandHandler("О нас", press_button4))
-    dp.add_handler(RegexHandler("О нас", press_button4))
+    dp.add_handler(CommandHandler("О нас", press_button4, pass_user_data=True))
+    dp.add_handler(RegexHandler("О нас", press_button4, pass_user_data=True))
 
-    dp.add_handler(CommandHandler('Контактные данные', calendar))
-    dp.add_handler(RegexHandler('Контактные данные', calendar))
+    dp.add_handler(CommandHandler("Мои записи", info, pass_user_data=True))
+    dp.add_handler(RegexHandler("Мои записи", info, pass_user_data=True))
              
     dp.add_handler(MessageHandler(Filters.contact, get_contact))
     dp.add_handler(MessageHandler(Filters.text, talk_to_me))
