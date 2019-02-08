@@ -78,6 +78,8 @@ def inline_master_pressed(bot, update, user_data):
         bot.send_message(chat_id=update.callback_query.from_user.id,
                         text="Отправьте Ваши контактные данные для уточнения заказа:", 
                         reply_markup=my_keyboard)
+        bot.delete_message(chat_id=update.callback_query.from_user.id,
+                        message_id=query.message.message_id)
         global p
         p = query.data
         user_data ['time'] = p
@@ -199,16 +201,10 @@ def press_button4(bot, update, user_data):
     update.message.reply_text("Здесь можно будет узнать о компании", 
                               reply_markup=my_keyboard_2)
 def info(bot, update, user_data):
-    conn = sqlite3.connect('mydatabase.db')
-    cursor = conn.cursor()
-    sql = 'SELECT * FROM info'
-    cursor.execute(sql)
-    data_base = cursor.fetchall()
-    print(data_base[0])
-    update.message.reply_text("Имя мастера: " + data_base[0][0] + 
-                                "; Услуга: " + data_base[0][1] +
-                                "; Дата: " + data_base[0][2] +
-                                "; Время: " + data_base[0][3])
+    update.message.reply_text("Имя мастера: " + user_data.get('name') + 
+                                "; Услуга: " + user_data.get('service') +
+                                "; Дата: " + user_data.get('date') +
+                                "; Время: " + user_data.get('time'))
 
 def main():
     mybot = Updater("728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo", request_kwargs=PROXY)
