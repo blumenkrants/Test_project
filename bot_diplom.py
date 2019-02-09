@@ -54,8 +54,18 @@ def inline_master(bot,update, user_data):
 
 # Обработчик контактов
 def get_contact(bot, update, user_data):
-    print(update.message.contact)
+    #print(update.message.contact)
+    contact = update.effective_message.contact
+    phone = contact.phone_number
+    print(prhone)
     update.message.reply_text('Спасибо')
+
+# Записываем контакты в базу
+#def contacts2db(user_id,customer_name,customer_email,customer_phone_number):
+#    print(user_id,customer_name,customer_email,customer_phone_number)
+#    conn.execute('''CREATE TABLE IF NOT EXISTS userdetails(user_id int,customer_name text,customer_email text,customer_phone_number int )''')
+#    conn.execute("INSERT INTO userdetails VALUES (?,?,?,?)",(user_id,customer_name,customer_email,customer_phone_number))
+#    conn.commit()
 
 
 # Инлайн клавиатуры
@@ -90,7 +100,12 @@ def inline_master_pressed(bot, update, user_data):
                         reply_markup=my_keyboard)
         bot.delete_message(chat_id=update.callback_query.from_user.id,
                         message_id=query.message.message_id)
-
+        
+ #Альтернативный запрос контактов (телефон у пользователя не всегда правильный или вообше есть, ники тоже не всегда нормальные)
+ #bot.send_message(chat_id=update.message.chat_id,text='Отправьте Ваши контактные данные для уточнения заказа в формате '
+ #                                                        'Имя, Адрес почты, Телефон')
+ #customer_name,customer_email,customer_phone_number=update.message.text.split(',')   
+ #contacts2db(customer_name,customer_email,customer_phone_number)
 
 # Запись всех данных в БД
         global p
