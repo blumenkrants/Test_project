@@ -63,9 +63,9 @@ def get_contact(bot, update, user_data):
 # Записываем контакты в базу
 #def contacts2db(user_id,customer_name,customer_email,customer_phone_number):
 #    print(user_id,customer_name,customer_email,customer_phone_number)
-#    connection.execute('''CREATE TABLE IF NOT EXISTS userdetails(user_id int,customer_name text,customer_email text,customer_phone_number int )''')
-#    connection.execute("INSERT INTO userdetails VALUES (?,?,?,?)",(user_id,customer_name,customer_email,customer_phone_number))
-#    connection.commit()
+#    conn.execute('''CREATE TABLE IF NOT EXISTS userdetails(user_id int,customer_name text,customer_email text,customer_phone_number int )''')
+#    conn.execute("INSERT INTO userdetails VALUES (?,?,?,?)",(user_id,customer_name,customer_email,customer_phone_number))
+#    conn.commit()
 
 
 # Инлайн клавиатуры
