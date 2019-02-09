@@ -23,7 +23,7 @@ def talk_to_me(bot, update):
 
 # /start
 def greet_user(bot, update):
-  text = 'Приносим свои извинения! Бот находится в стадии разработки!'
+  text = 'Вас приветствует salon_sevice_bot! Для записи нажмите "Записаться на услугу"'
   my_keyboard = ReplyKeyboardMarkup([['Записаться на услугу'],
                                    ['Мои записи', 'О нас']],
                                    resize_keyboard=True, 
