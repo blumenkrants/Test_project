@@ -1,6 +1,6 @@
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler,ConversationHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, Filters, RegexHandler
 from telegram.ext import CallbackQueryHandler
 from telegram import ReplyKeyboardRemove
 import telegramcalendar
@@ -20,8 +20,39 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
 
 logger = logging.getLogger(__name__)
 
-def calendar_handler(bot,update):
-    # функция вызова инлайн клавиатур
+def greet_user(bot, update):
+# функция - /start
+    text = 'Вас приветствует salon_service_bot!'
+    my_keyboard = ReplyKeyboardMarkup([['Запись'],
+                                       ['Мои записи', 'О нас']],
+                                      resize_keyboard=True,
+                                      one_time_keyboard=True)
+    update.message.reply_text(text, reply_markup=my_keyboard)
+
+
+def choose_master(bot, update):
+# функция вызова инлайн клавиатуры с мастерами
+    conn = sqlite3.connect('mydatabase.db')
+    cursor = conn.cursor()
+    sql = "SELECT barber_name FROM barbers"
+    cursor.execute(sql)
+    data_base = cursor.fetchall()
+    all_masters = []
+    for masters in data_base:
+        all_masters.append(masters[0])
+    keyboard = []
+    row = []
+    for i in all_masters:
+        row.append(InlineKeyboardButton(i, callback_data=str(i)))
+    keyboard.append(row)
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    # bot.send_photo(chat_id=update.message.chat.id,
+    #                photo=open('C:\projects\diplom\photo\BRB 666.jpg', 'rb'))
+    update.message.reply_text('Выберите мастера', reply_markup=reply_markup)
+    return FIRST
+
+def choose_service(bot,update):
+# функция вызова инлайн клавиатуры с услугами
     conn = sqlite3.connect('mydatabase.db')
     cursor = conn.cursor()
 
@@ -68,16 +99,16 @@ def calendar_handler(bot,update):
                           reply_markup=reply_markup)
     return SECOND
 
-def calendar_handler1(bot,update):
+def calendar(bot,update):
+# функция вызова календаря
     query = update.callback_query
-
     bot.edit_message_reply_markup(chat_id=query.message.chat_id,
                                   message_id=query.message.message_id,
                                   reply_markup=telegramcalendar.create_calendar())
     return FIRD
 
 def time(bot,update):
-    print('lol')
+# функция вызова инлайн клавиатуры с временем
     query = update.callback_query
     selected,date = telegramcalendar.process_calendar_selection(bot, update)
     if selected:
@@ -94,6 +125,7 @@ def time(bot,update):
     return FOR
 
 def contact (bot,update):
+# функция вызова запроса контактов
     query = update.callback_query
     print(query.data)
     contact_button = KeyboardButton('Контактные данные', request_contact=True)
@@ -106,7 +138,7 @@ def contact (bot,update):
 
 
 def get_contact(bot, update, user_data):
-    # функция обработчик контактов
+# функция обработчик контактов
     # print(update.message.contact)
     a = str(update.message.contact)
     phone = a[18:29]
@@ -115,35 +147,15 @@ def get_contact(bot, update, user_data):
 
 
 
-def start(bot, update):
-    # функция вызова инлайн клавиатуры с мастерами
-    conn = sqlite3.connect('mydatabase.db')
-    cursor = conn.cursor()
-    sql = "SELECT barber_name FROM barbers"
-    cursor.execute(sql)
-    data_base = cursor.fetchall()
-    all_masters = []
-    for masters in data_base:
-        all_masters.append(masters[0])
-    keyboard = []
-    row = []
-    for i in all_masters:
-        row.append(InlineKeyboardButton(i, callback_data=str(i)))
-    keyboard.append(row)
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    # bot.send_photo(chat_id=update.message.chat.id,
-    #                photo=open('C:\projects\diplom\photo\BRB 666.jpg', 'rb'))
-    update.message.reply_text('Выберите мастера', reply_markup=reply_markup)
-    return FIRST
-
 def main():
     mybot = Updater("728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo", request_kwargs=PROXY)
     dp = mybot.dispatcher
+    dp.add_handler(CommandHandler("start", greet_user))
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[RegexHandler('Запись', choose_master)],
         states={
-            FIRST: [CallbackQueryHandler(calendar_handler)],
-            SECOND: [CallbackQueryHandler(calendar_handler1)],
+            FIRST: [CallbackQueryHandler(choose_service)],
+            SECOND: [CallbackQueryHandler(calendar)],
             FIRD: [CallbackQueryHandler(time)],
             FOR: [CallbackQueryHandler(contact)]
         },
