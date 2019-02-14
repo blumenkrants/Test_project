@@ -1,6 +1,6 @@
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler,ConversationHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler,ConversationHandler, MessageHandler, Filters
 from telegram.ext import CallbackQueryHandler
 from telegram import ReplyKeyboardRemove
 import telegramcalendar
@@ -12,7 +12,7 @@ PROXY = {'proxy_url': 'socks5://t1.learn.python.ru:1080',
 TOKEN = "728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo"
 
 
-FIRST, SECOND, FIRD = range(3)
+FIRST, SECOND, FIRD, FOR = range(4)
 
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
@@ -81,9 +81,38 @@ def time(bot,update):
     query = update.callback_query
     selected,date = telegramcalendar.process_calendar_selection(bot, update)
     if selected:
+        inline_keyboard = [[InlineKeyboardButton('10:00', callback_data ='10:00'),
+                            InlineKeyboardButton('11:00', callback_data ='11:00')],
+                            [InlineKeyboardButton('12:00', callback_data ='12:00'),
+                            InlineKeyboardButton('13:00', callback_data ='13:00')],
+                            [InlineKeyboardButton('14:00', callback_data ='14:00'),
+                            InlineKeyboardButton('15:00', callback_data ='15:00')]]
+        reply_markup = InlineKeyboardMarkup(inline_keyboard)
         bot.edit_message_reply_markup(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
-                                      reply_markup=telegramcalendar.create_calendar())
+                                      reply_markup=reply_markup)
+    return FOR
+
+def contact (bot,update):
+    query = update.callback_query
+    print(query.data)
+    contact_button = KeyboardButton('Контактные данные', request_contact=True)
+    my_keyboard = ReplyKeyboardMarkup([[contact_button]],
+                                      resize_keyboard=True,
+                                      one_time_keyboard=True)
+    bot.send_message(chat_id=update.callback_query.from_user.id,
+                         text="Отправьте Ваши контактные данные для уточнения заказа:",
+                         reply_markup=my_keyboard)
+
+
+def get_contact(bot, update, user_data):
+    # функция обработчик контактов
+    # print(update.message.contact)
+    a = str(update.message.contact)
+    phone = a[18:29]
+    user_data ['phone'] = phone
+    print(user_data)
+
 
 
 def start(bot, update):
@@ -115,9 +144,10 @@ def main():
         states={
             FIRST: [CallbackQueryHandler(calendar_handler)],
             SECOND: [CallbackQueryHandler(calendar_handler1)],
-            FIRD: [CallbackQueryHandler(time)]
+            FIRD: [CallbackQueryHandler(time)],
+            FOR: [CallbackQueryHandler(contact)]
         },
-        fallbacks=[CommandHandler('start', start)]
+        fallbacks=[MessageHandler(Filters.contact, get_contact, pass_user_data=True)]
     )
     dp.add_handler(conv_handler)
 
