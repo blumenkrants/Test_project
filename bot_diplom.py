@@ -2,7 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, Filters, RegexHandler
 import logging
 import telegramcalendar
-import sqlite3
+import psycopg2
 
 PROXY = {'proxy_url': 'socks5://t1.learn.python.ru:1080',
          'urllib3_proxy_kwargs': {'username': 'learn', 'password': 'python'}}
@@ -34,7 +34,8 @@ def greet_user(bot, update):
 
 def choose_master(bot, update):
     # функция вызова инлайн клавиатуры с мастерами
-    conn = sqlite3.connect('mydatabase.db')
+    conn = psycopg2.connect(dbname='mydatabase', user='postgres', 
+                            password='qwerty', host='192.168.0.100')
     cursor = conn.cursor()
     sql = "SELECT barber_name FROM barbers"
     cursor.execute(sql)
@@ -55,9 +56,9 @@ def choose_master(bot, update):
 
 def choose_service(bot,update, user_data):
     # функция вызова инлайн клавиатуры с услугами
-    conn = sqlite3.connect('mydatabase.db')
+    conn = psycopg2.connect(dbname='mydatabase', user='postgres', 
+                            password='qwerty', host='192.168.0.100')
     cursor = conn.cursor()
-
     sql = "SELECT * FROM barbers"
     cursor.execute(sql)
     data_base = cursor.fetchall()
@@ -159,32 +160,36 @@ def get_contact(bot, update, user_data):
     user_data ['phone'] = phone
     print(user_data)
 
-
-# Запись всех данных в БД
-    # conn = sqlite3.connect('mydatabase.db')
-    # cursor = conn.cursor()
-    # cort_1 = (user_data.get('name'),)
-    # cort_2 = cort_1 + (user_data.get('service'),)
-    # cort_3 = cort_2 + (user_data.get('date'),)
-    # cort_4 = cort_3 + (user_data.get('time'),)
-    # cort_5 = cort_4 + (user_data.get('phone'),)
-    # print(cort_5)
-    # data = []
-    # data.append(cort_5)
-    # cursor.executemany("INSERT INTO record_info VALUES (?,?,?,?,?)", data)
-    # conn.commit()
-
-
     my_keyboard = ReplyKeyboardMarkup([['Вернуться в главное меню']],
                                       resize_keyboard=True)
     update.message.reply_text("Спасибо! \n "
                               "Вы можете посмотреть информацию о своих записях в главном меню",
                               reply_markup=my_keyboard)
 
+# Запись всех данных в БД
+    conn = psycopg2.connect(dbname='mydatabase', user='postgres', 
+                            password='qwerty', host='192.168.0.100')
+    cursor = conn.cursor()
+    cort_1 = (user_data.get('name'),)
+    cort_2 = cort_1 + (user_data.get('service'),)
+    cort_3 = cort_2 + (user_data.get('date'),)
+    cort_4 = cort_3 + (user_data.get('time'),)
+    cort_5 = cort_4 + (user_data.get('phone'),)
+    print(cort_5)
+    # data = []
+    # data.append(cort_5)
+    cursor.execute("INSERT INTO info (name, service, date, time, number) VALUES (%s, %s, %s, %s, %s)", cort_5)
+    conn.commit()
+    conn.close()
+
+
+
+
+
 
 def my_entry(bot, update, user_data):
     # функция вывод информации о записях
-    my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в меню"]],
+    my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в главное меню"]],
                                         resize_keyboard=True)
     update.message.reply_text("Имя мастера: " + user_data.get('name') + "\n"
                               "Услуга: " + user_data.get('service') + "\n"
