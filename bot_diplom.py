@@ -168,10 +168,7 @@ def contact (bot,update, user_data):
 
 def get_contact(bot, update, user_data):
     # функция обработчик контактов
-    # print(update.message.contact)
-    a = str(update.message.contact)
-    phone = a[18:30]
-    user_data ['phone'] = phone
+    user_data ['phone'] = update.message.contact.phone_number
     print(user_data)
     my_keyboard = ReplyKeyboardMarkup([['Вернуться в главное меню']],
                                       resize_keyboard=True)
@@ -181,39 +178,39 @@ def get_contact(bot, update, user_data):
 
 
     #создание события в гугл календаре
-    creds = None
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    service = build('calendar', 'v3', credentials=creds)
-    event = {
-            'summary': '%s' % user_data.get('service'),
-            'description': 'Мастер: %s, Номер клиента: %s' % (user_data.get('name'), user_data.get('phone')),
-            'start':  {'dateTime': '%sT%s:00+03:00' % (user_data.get('date'), user_data.get('time'))},
-            'end':    {'dateTime': '%sT%s:00+02:00' % (user_data.get('date'), user_data.get('time'))},
-            }
-    event = service.events().insert(calendarId='primary', body=event).execute()
-    print ('Event created: %s' % (event.get('htmlLink')))
+    # creds = None
+    # if os.path.exists('token.pickle'):
+    #     with open('token.pickle', 'rb') as token:
+    #         creds = pickle.load(token)
+    # service = build('calendar', 'v3', credentials=creds)
+    # event = {
+    #         'summary': '%s' % user_data.get('service'),
+    #         'description': 'Мастер: %s, Номер клиента: %s' % (user_data.get('name'), user_data.get('phone')),
+    #         'start':  {'dateTime': '%sT%s:00+03:00' % (user_data.get('date'), user_data.get('time'))},
+    #         'end':    {'dateTime': '%sT%s:00+02:00' % (user_data.get('date'), user_data.get('time'))},
+    #         }
+    # event = service.events().insert(calendarId='primary', body=event).execute()
+    # print ('Event created: %s' % (event.get('htmlLink')))
 
 
 # Запись всех данных в БД
-    conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
-                                   database='j949396', 
-                                   user='j949396', 
-                                   password='qwerty')
-    cursor = conn.cursor()
-    cort_1 = (user_data.get('name'),)
-    cort_2 = cort_1 + (user_data.get('service'),)
-    cort_3 = cort_2 + (user_data.get('date'),)
-    cort_4 = cort_3 + (user_data.get('time'),)
-    cort_5 = cort_4 + (user_data.get('phone'),)
-    print(cort_5)
-    data = []
-    data.append(cort_5)
-    cursor.execute("INSERT INTO record_info (name, service, date, time, number) VALUES (%s, %s, %s, %s, %s)", cort_5)
-    conn.commit()
-    cursor.close()
-    conn.close()
+    # conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
+    #                                database='j949396', 
+    #                                user='j949396', 
+    #                                password='qwerty')
+    # cursor = conn.cursor()
+    # cort_1 = (user_data.get('name'),)
+    # cort_2 = cort_1 + (user_data.get('service'),)
+    # cort_3 = cort_2 + (user_data.get('date'),)
+    # cort_4 = cort_3 + (user_data.get('time'),)
+    # cort_5 = cort_4 + (user_data.get('phone'),)
+    # print(cort_5)
+    # data = []
+    # data.append(cort_5)
+    # cursor.execute("INSERT INTO record_info (name, service, date, time, number) VALUES (%s, %s, %s, %s, %s)", cort_5)
+    # conn.commit()
+    # cursor.close()
+    # conn.close()
     
 
 def my_entry(bot, update, user_data):
