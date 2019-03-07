@@ -1,8 +1,20 @@
+from __future__ import print_function
+import datetime
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, Filters, RegexHandler
 import logging
+import mysql.connector
 import telegramcalendar
 import psycopg2
+import quickstart 
+
 
 PROXY = {'proxy_url': 'socks5://t1.learn.python.ru:1080',
          'urllib3_proxy_kwargs': {'username': 'learn', 'password': 'python'}}
@@ -34,8 +46,10 @@ def greet_user(bot, update):
 
 def choose_master(bot, update):
     # функция вызова инлайн клавиатуры с мастерами
-    conn = psycopg2.connect(dbname='mydatabase', user='postgres', 
-                            password='qwerty', host='192.168.0.100')
+    conn = conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
+                                          database='j949396', 
+                                          user='j949396', 
+                                          password='qwerty')
     cursor = conn.cursor()
     sql = "SELECT barber_name FROM barbers"
     cursor.execute(sql)
@@ -56,8 +70,10 @@ def choose_master(bot, update):
 
 def choose_service(bot,update, user_data):
     # функция вызова инлайн клавиатуры с услугами
-    conn = psycopg2.connect(dbname='mydatabase', user='postgres', 
-                            password='qwerty', host='192.168.0.100')
+    conn = conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
+                                          database='j949396', 
+                                          user='j949396', 
+                                          password='qwerty')
     cursor = conn.cursor()
     sql = "SELECT * FROM barbers"
     cursor.execute(sql)
@@ -134,7 +150,7 @@ def time(bot,update, user_data):
         bot.edit_message_reply_markup(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
                                       reply_markup=reply_markup)
-    user_data ['date'] = date.strftime("%d/%m/%Y")
+    user_data ['date'] = date.strftime("%Y-%m-%d")
     return FOURTH
 
 def contact (bot,update, user_data):
@@ -159,16 +175,34 @@ def get_contact(bot, update, user_data):
     phone = a[18:30]
     user_data ['phone'] = phone
     print(user_data)
-
     my_keyboard = ReplyKeyboardMarkup([['Вернуться в главное меню']],
                                       resize_keyboard=True)
-    update.message.reply_text("Спасибо! \n "
+    update.message.reply_text("Спасибо! \n"
                               "Вы можете посмотреть информацию о своих записях в главном меню",
                               reply_markup=my_keyboard)
 
+
+    #создание события в гугл календаре
+    creds = None
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    service = build('calendar', 'v3', credentials=creds)
+    event = {
+            'summary': '%s' % user_data.get('service'),
+            'description': 'Мастер: %s, Номер клиента: %s' % (user_data.get('name'), user_data.get('phone')),
+            'start':  {'dateTime': '%sT%s:00+03:00' % (user_data.get('date'), user_data.get('time'))},
+            'end':    {'dateTime': '%sT%s:00+02:00' % (user_data.get('date'), user_data.get('time'))},
+            }
+    event = service.events().insert(calendarId='primary', body=event).execute()
+    print ('Event created: %s' % (event.get('htmlLink')))
+
+
 # Запись всех данных в БД
-    conn = psycopg2.connect(dbname='mydatabase', user='postgres', 
-                            password='qwerty', host='192.168.0.100')
+    conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
+                                          database='j949396', 
+                                          user='j949396', 
+                                          password='qwerty')
     cursor = conn.cursor()
     cort_1 = (user_data.get('name'),)
     cort_2 = cort_1 + (user_data.get('service'),)
@@ -176,16 +210,13 @@ def get_contact(bot, update, user_data):
     cort_4 = cort_3 + (user_data.get('time'),)
     cort_5 = cort_4 + (user_data.get('phone'),)
     print(cort_5)
-    # data = []
-    # data.append(cort_5)
-    cursor.execute("INSERT INTO info (name, service, date, time, number) VALUES (%s, %s, %s, %s, %s)", cort_5)
+    data = []
+    data.append(cort_5)
+    cursor.execute("INSERT INTO record_info (name, service, date, time, number) VALUES (%s, %s, %s, %s, %s)", cort_5)
     conn.commit()
+    cursor.close()
     conn.close()
-
-
-
-
-
+    
 
 def my_entry(bot, update, user_data):
     # функция вывод информации о записях
