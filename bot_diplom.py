@@ -12,8 +12,6 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Conversa
 import logging
 import mysql.connector
 import telegramcalendar
-import psycopg2
-import quickstart 
 
 
 PROXY = {'proxy_url': 'socks5://t1.learn.python.ru:1080',
@@ -46,10 +44,10 @@ def greet_user(bot, update):
 
 def choose_master(bot, update):
     # функция вызова инлайн клавиатуры с мастерами
-    conn = conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
-                                          database='j949396', 
-                                          user='j949396', 
-                                          password='qwerty')
+    conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
+                                   database='j949396', 
+                                   user='j949396', 
+                                   password='qwerty')
     cursor = conn.cursor()
     sql = "SELECT barber_name FROM barbers"
     cursor.execute(sql)
@@ -200,9 +198,9 @@ def get_contact(bot, update, user_data):
 
 # Запись всех данных в БД
     conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
-                                          database='j949396', 
-                                          user='j949396', 
-                                          password='qwerty')
+                                   database='j949396', 
+                                   user='j949396', 
+                                   password='qwerty')
     cursor = conn.cursor()
     cort_1 = (user_data.get('name'),)
     cort_2 = cort_1 + (user_data.get('service'),)
