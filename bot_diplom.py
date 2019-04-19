@@ -2,6 +2,7 @@ from __future__ import print_function
 import datetime
 import pickle
 import os.path
+from emoji import emojize
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -25,7 +26,7 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
 
 logger = logging.getLogger(__name__)
 
-FIRST, SECOND, THIRD, FOURTH = range(4)
+FIRST, SECOND, THIRD, FOURTH, FIVE = range(5)
 
 conn = mysql.connector.connect(host='mysql.j949396.myjino.ru', 
                                database='j949396', 
@@ -33,7 +34,35 @@ conn = mysql.connector.connect(host='mysql.j949396.myjino.ru',
                                password='qwerty')
 cursor = conn.cursor()
 
+# Список эмодзи
+# smile = emojize(':memo:', use_aliases=True)
+# smile_2 = emojize(':clock8:', use_aliases=True)
+# smile_3 = emojize(':convenience_store:', use_aliases=True)
+# smile_4 = emojize(':no_entry_sign:', use_aliases=True)
+# smile_5 = emojize(':heavy_plus_sign:', use_aliases=True)
+# smile_6 = emojize(':back:', use_aliases=True)
 
+smile = emojize(':heavy_plus_sign:', use_aliases=True)
+smile_2 = emojize(':ledger:', use_aliases=True)
+smile_3 = emojize(':information_source:', use_aliases=True)
+smile_4 = emojize(':x:', use_aliases=True)
+smile_5 = emojize(':calendar:', use_aliases=True)
+smile_6 = emojize(':man:', use_aliases=True)
+smile_7 = emojize(':scissors:', use_aliases=True)
+smile_8 = emojize(':clock230:', use_aliases=True)
+smile_9 = emojize(':white_check_mark:', use_aliases=True)
+smile_10 = emojize(':no_entry_sign:', use_aliases=True)
+smile_11 = emojize(':iphone:', use_aliases=True)
+smile_12 = emojize(':barber:', use_aliases=True)
+smile_13 = emojize(':leftwards_arrow_with_hook:', use_aliases=True)
+
+
+
+start_keyboard = ReplyKeyboardMarkup([['Запись {}'.format(smile)],
+                                   ['Мои записи {}'.format(smile_2), 
+                                    'О нас {}'.format(smile_3)]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
 def talk_to_me(bot, update):
     # функция - ответ на текст введенный пользователем
     update.message.reply_text('Нажмите /start для запуска бота')
@@ -42,19 +71,20 @@ def greet_user(bot, update, user_data):
     # функция - /start
     if user_data == {}:
         text = 'Вас приветствует salon_service_bot!'
-        my_keyboard = ReplyKeyboardMarkup([['Запись'],
-                                           ['Мои записи', 'О нас']],
-                                          resize_keyboard=True,
-                                          one_time_keyboard=True)
-        update.message.reply_text(text, reply_markup=my_keyboard)
+        # my_keyboard = ReplyKeyboardMarkup([['Запись {}'.format(smile)],
+        #                                    ['Мои записи {}'.format(smile_2), 
+        #                                     'О нас {}'.format(smile_3)]],
+        #                                   resize_keyboard=True,
+        #                                   one_time_keyboard=True)
+        update.message.reply_text(text, reply_markup=start_keyboard)
     else: 
         text_2 = 'Выберите дальнейшее действие'
-        my_keyboard_2 = ReplyKeyboardMarkup([['Мои записи'],
-                                   ['Отменить запись', 'Добавить Запись']],
+        my_keyboard_2 = ReplyKeyboardMarkup([['Мои записи{}'.format(smile_2)],
+                                            ['Отменить все записи{}'.format(smile_4), 
+                                             'Добавить Запись{}'.format(smile_5)]],
                                   resize_keyboard=True,
                                   one_time_keyboard=True)
         update.message.reply_text(text_2, reply_markup=my_keyboard_2)
-
 
 def choose_master(bot, update, user_data):
     # функция вызова инлайн клавиатуры с мастерами 
@@ -121,7 +151,7 @@ def choose_service(bot,update, user_data):
                           chat_id=update.callback_query.from_user.id,
                           message_id=query.message.message_id,
                           reply_markup=reply_markup)
-# Запись данных в user_data
+    # Запись данных в user_data
     user_data ['service'] = query.data
     return SECOND
 
@@ -130,12 +160,11 @@ def calendar(bot,update, user_data):
     query = update.callback_query
     bot.edit_message_text(text='Выберите дату:',
                           chat_id=update.callback_query.from_user.id,
-                          message_id=query.message.message_id)
-    bot.edit_message_reply_markup(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  reply_markup=telegramcalendar.create_calendar())
+                          message_id=query.message.message_id,
+                          reply_markup=telegramcalendar.create_calendar_vova())
     user_data ['name'] = query.data
     return THIRD
+
 
 def time(bot,update, user_data):
     # функция вызова инлайн клавиатуры с временем
@@ -184,7 +213,6 @@ def time(bot,update, user_data):
     user_data ['date'] = date.strftime("%Y-%m-%d")
     return FOURTH
 
-
 def contact (bot,update, user_data):
     # функция вызова запроса контактов
     query = update.callback_query
@@ -202,16 +230,15 @@ def contact (bot,update, user_data):
                            message_id=query.message.message_id)
         user_data ['time'] = query.data
 
-
 def get_contact(bot, update, user_data):
     # функция обработчик контактов
-    user_data ['phone'] = update.message.contact.phone_number
-    print(user_data)
-    my_keyboard = ReplyKeyboardMarkup([['Вернуться в главное меню']],
+    user_data ['number'] = update.message.contact.phone_number
+    my_keyboard = ReplyKeyboardMarkup([['Вернуться в главное меню {}'.format(smile_6)]],
                                       resize_keyboard=True)
     update.message.reply_text("Спасибо! \n"
                               "Вы можете посмотреть информацию о своих записях в главном меню",
                               reply_markup=my_keyboard)
+    print(user_data)
 
 
     #создание события в гугл календаре
@@ -230,12 +257,12 @@ def get_contact(bot, update, user_data):
     # print ('Event created: %s' % (event.get('htmlLink')))
 
 
-# Запись всех данных в БД
+    # Запись всех данных в БД
     cort_1 = (user_data.get('name'),)
     cort_2 = cort_1 + (user_data.get('service'),)
     cort_3 = cort_2 + (user_data.get('date'),)
     cort_4 = cort_3 + (user_data.get('time'),)
-    cort_5 = cort_4 + (user_data.get('phone'),)
+    cort_5 = cort_4 + (user_data.get('number'),)
     data = []
     data.append(cort_5)
     cursor.execute("INSERT INTO record_info (name, service, date, time, number) VALUES (%s, %s, %s, %s, %s)", cort_5)
@@ -243,44 +270,158 @@ def get_contact(bot, update, user_data):
     # cursor.close()
     # conn.close()
     
-
 def my_entry(bot, update, user_data):
     # функция вывод информации о записях
-    my_keyboard_2 = ReplyKeyboardMarkup([["Вернуться в главное меню"]],
-                                        resize_keyboard=True)
-    update.message.reply_text("Имя мастера: " + user_data.get('name') + "\n"
-                              "Услуга: " + user_data.get('service') + "\n"
-                              "Дата: " + user_data.get('date') + "\n"
-                              "Время: " + user_data.get('time'),
-                              reply_markup=my_keyboard_2)
+    query = update.callback_query
+
+    if user_data == {}:
+        bot.send_message(chat_id=update.callback_query.from_user.id,
+                         text='У вас нет записей {}'.format(smile_10),
+                         reply_markup=start_keyboard)
+        print('lol_2')
+
+    else:
+        sql = "SELECT * FROM record_info"
+        cursor.execute(sql)
+        data_base = cursor.fetchall()
+
+        # print(data_base)
+        row = []
+        row_1 = []
+        row_2 = []
+        all_entries = []
+        menu = []
+
+        x = []
+
+        keyboard = []
+
+        for z in data_base:
+            if user_data.get('number') == z[4]:
+                x.extend((z[0], z[1], z[3]))
+        # print(x)
+
+        if len(x) == 3:
+            row.append(InlineKeyboardButton((x[0] + ', ' + x[1] + ', ' + x[2]), callback_data=1))
+            keyboard.append(row)
+        elif len(x) == 6:
+            row.append(InlineKeyboardButton((x[0] + ', ' + x[1] + ', ' + x[2]), callback_data=1))
+            row_1.append(InlineKeyboardButton((x[3] + ', ' + x[4] + ', ' + x[5]), callback_data=2))
+            all_entries.append(InlineKeyboardButton('!!! Отменить все записи !!!', callback_data='Отменить все записи'))
+            keyboard.extend((row, row_1, all_entries))
+        elif len(x) > 6:
+            row.append(InlineKeyboardButton((x[0] + ', ' + x[1] + ', ' + x[2]), callback_data=1))
+            row_1.append(InlineKeyboardButton((x[3] + ', ' + x[4] + ', ' + x[5]), callback_data=2))
+            row_2.append(InlineKeyboardButton((x[6] + ', ' + x[7] + ', ' + x[8]), callback_data=3))
+            all_entries.append(InlineKeyboardButton('!!! Отменить все записи !!!', callback_data='Отменить все записи'))
+            keyboard.extend((row, row_1, row_2, all_entries))
 
 
-def info(bot, update):
-    # функция вывод информации о салоне
-    my_keyboard = ReplyKeyboardMarkup([['Вернуться в главное меню']],
-                                      resize_keyboard=True)
-    # bot.send_photo(chat_id=update.message.chat.id,
-    #                photo=open('C:\projects\diplom\photo\mapbrb.jpg', 'rb'))
-    update.message.reply_text("Наши контакты: \n "
-                              "Адрес: г.Москва, ул.Большая Ордынка 17 стр.1 \n "
-                              "Телефон: +74951234567 \n "
-                              "Часы работы: \n "
-                              "Будни: с 10:00 до 22:00 \n "
-                              "Выходные: c 12:00 до 22:00",
-                              reply_markup=my_keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
 
-def delete(bot, update, user_data):
+        update.message.reply_text('Клиент:',
+                                  reply_markup=reply_markup)
+        # bot.edit_message_text(text='Выберите время:',
+        #                       chat_id=query.message.chat_id,
+        #                     message_id=query.message.message_id)
+
+        return FIVE
+
+
+def cancel_entries(bot, update, user_data):
+    # информация о записях, а также их отмена по одной
+    query = update.callback_query
+    service = query.data
+
+    sql = "SELECT * FROM record_info"
+    cursor.execute(sql)
+    data_base = cursor.fetchall()
+
+    #удалить потом
+    sql_2 = "SELECT number FROM record_info"
+    cursor.execute(sql_2)
+    data_base_2 = cursor.fetchall()
+
+    info_list = []
+    for data_list in data_base:
+        if user_data.get('number') in data_list[4]:
+            info_list.append(data_list[0])
+
+    if service == '1':
+        a = (info_list[0], user_data.get('number'))
+        cursor.execute("DELETE FROM record_info WHERE service = %s and number = %s", a)
+        conn.commit()
+        print('Запись отменена!')
+        user_data.clear()
+
+
+        # bot.delete_message(chat_id=update.callback_query.from_user.id,
+        #                    message_id=query.message.message_id)
+
+        # bot.edit_message_text(text='Запись отменена!',
+        #                       chat_id=query.message.chat_id,
+        #                       message_id=query.message.message_id,
+        #                       reply_markup=telegramcalendar.create_calendar_vova())
+
+        ''' просто попробовал поменять клаву на другую'''
+
+        # x = ['lol', 'anabol']
+
+        # keyboard = []
+
+        # row = []
+
+        # row.append(InlineKeyboardButton(x[0], callback_data='lol'))
+
+        # keyboard.append(row)
+
+        # reply_markup = InlineKeyboardMarkup(keyboard)
+        # bot.edit_message_reply_markup(chat_id=query.message.chat_id,
+        #                               message_id=query.message.message_id,
+        #                               reply_markup=reply_markup)
+
+        ''' просто попробовал поменять клаву на другую'''
+
+    elif service == '2':
+        a = (info_list[1], user_data.get('number'))
+        cursor.execute("DELETE FROM record_info WHERE service = %s and number = %s", a)
+        conn.commit()
+        print('Запись отменена!')
+        # update.message.reply_text('Запись отменена!', reply_markup=my_entry(bot, update, user_data))
+
+    elif service == '3':
+        a = (info_list[2], user_data.get('number'))
+        cursor.execute("DELETE FROM record_info WHERE service = %s and number = %s", a)
+        conn.commit()
+        print('Запись отменена!')
+        # update.message.reply_text('Запись отменена!', reply_markup=my_entry(bot, update, user_data))
+
+    elif service == 'Отменить все записи':
+        # переделать блок
+        for record in data_base_2:
+            a = user_data.get('number')
+            cursor.execute("DELETE FROM record_info WHERE number = %s" % a)
+            user_data.clear()
+            print('Отменены все записи!')
+            conn.commit()
+            # update.message.reply_text('Вы отменили  все записи {}'.format(smile_9),
+            #                           reply_markup=start_keyboard)
+    bot.edit_message_reply_markup(chat_id=query.message.chat_id,
+                                  message_id=query.message.message_id,
+                                  reply_markup=my_entry(bot, update, user_data))
+
+
+def delete_all(bot, update, user_data):
     sql = "SELECT number FROM record_info"
     cursor.execute(sql)
     data_base = cursor.fetchall()
     for phone in data_base:
-        a = user_data.get('phone')
+        a = user_data.get('number')
         cursor.execute("DELETE FROM record_info WHERE number =  %s" % a)
         conn.commit()
     user_data.clear()
     greet_user(bot, update, user_data)
-
 
 def main():
     mybot = Updater("728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo", request_kwargs=PROXY)
@@ -289,11 +430,14 @@ def main():
 
     conv_handler = ConversationHandler(
         entry_points=[RegexHandler('Запись', choose_master, pass_user_data=True),
-                      RegexHandler('Добавить Запись', choose_master, pass_user_data=True)],
+                      RegexHandler('Добавить Запись', choose_master, pass_user_data=True),
+                      RegexHandler('Вернуться к началу', choose_master, pass_user_data=True),
+                      RegexHandler('Мои записи', my_entry, pass_user_data=True)],
         states={FIRST: [CallbackQueryHandler(choose_service, pass_user_data=True)],
                 SECOND: [CallbackQueryHandler(calendar, pass_user_data=True)],
                 THIRD: [CallbackQueryHandler(time, pass_user_data=True)],
-                FOURTH: [CallbackQueryHandler(contact, pass_user_data=True)]},
+                FOURTH: [CallbackQueryHandler(contact, pass_user_data=True)],
+                FIVE: [CallbackQueryHandler(cancel_entries, pass_user_data=True)]},
         fallbacks=[MessageHandler(Filters.contact, get_contact, pass_user_data=True)],
         allow_reentry=True)
 
@@ -301,11 +445,20 @@ def main():
     
     dp.add_handler(CommandHandler("start", greet_user, pass_user_data=True))
     
-    dp.add_handler(CommandHandler("Мои записи", my_entry, pass_user_data=True))
-    dp.add_handler(RegexHandler("Мои записи", my_entry, pass_user_data=True))
+    # dp.add_handler(CommandHandler("Мои записи", my_entry, pass_user_data=True))
+    # dp.add_handler(RegexHandler("Мои записи", my_entry, pass_user_data=True))
 
-    dp.add_handler(CommandHandler("Отменить запись", delete, pass_user_data=True))
-    dp.add_handler(RegexHandler("Отменить запись", delete, pass_user_data=True))
+    # dp.add_handler(CommandHandler("№ 1", delete_service_1, pass_user_data=True))
+    # dp.add_handler(RegexHandler("№ 1", delete_service_1, pass_user_data=True))
+
+    # dp.add_handler(CommandHandler("№ 2", delete_service_2, pass_user_data=True))
+    # dp.add_handler(RegexHandler("№ 2", delete_service_2, pass_user_data=True))
+
+    # dp.add_handler(CommandHandler("№ 3", delete_service_3, pass_user_data=True))
+    # dp.add_handler(RegexHandler("№ 3", delete_service_3, pass_user_data=True))
+
+    dp.add_handler(CommandHandler("Отменить все записи", delete_all, pass_user_data=True))
+    dp.add_handler(RegexHandler("Отменить все записи", delete_all, pass_user_data=True))
 
     dp.add_handler(CommandHandler("Вернуться в главное меню", greet_user, pass_user_data=True))
     dp.add_handler(RegexHandler("Вернуться в главное меню", greet_user, pass_user_data=True))
@@ -313,8 +466,8 @@ def main():
     dp.add_handler(CommandHandler('Запись', choose_master, pass_user_data=True))
     dp.add_handler(RegexHandler('Запись', choose_master, pass_user_data=True))
 
-    dp.add_handler(CommandHandler("О нас", info))
-    dp.add_handler(RegexHandler("О нас", info))
+    # dp.add_handler(CommandHandler("О нас", info))
+    # dp.add_handler(RegexHandler("О нас", info))
 
     dp.add_handler(MessageHandler(Filters.text, talk_to_me))
 
