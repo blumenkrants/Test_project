@@ -19,6 +19,7 @@ from telegram.ext import messagequeue as mq
 
 
 
+
 PROXY = {'proxy_url': 'socks5://t1.learn.python.ru:1080',
          'urllib3_proxy_kwargs': {'username': 'learn', 'password': 'python'}}
 
@@ -37,7 +38,6 @@ conn = mysql.connector.connect(host='mysql.j949396.myjino.ru',
                                user='j949396', 
                                password='qwerty')
 cursor = conn.cursor()
-print(datetime.datetime.now())
 
 smile = emojize(':heavy_plus_sign:', use_aliases=True)
 smile_2 = emojize(':ledger:', use_aliases=True)
@@ -111,7 +111,8 @@ def choose_master(bot, update, user_data):
     keyboard.append(rows)
     reply_markup = InlineKeyboardMarkup(keyboard)
     # bot.send_photo(chat_id=update.message.chat.id,
-    #                photo=open('C:\projects\diplom\photo\BRB 666.jpg', 'rb'))
+    #                 photo="http://nibler.ru/uploads/users/11119/2015-10-14/oblakah-fakty-interesnye-_189279796.jpg")
+    #                # photo=open('C:\projects\diplom\photo\BRB 666.jpg', 'rb'))
     update.message.reply_text(info_text, reply_markup=reply_markup)
     return FIRST
 
@@ -131,6 +132,7 @@ def choose_service(bot,update, user_data):
 
     query = update.callback_query
     name = query.data
+
     # Клавиатура с услугами
     counter = []
     for service_id in data_base_2:
@@ -145,16 +147,38 @@ def choose_service(bot,update, user_data):
                             all_barbers.append(barber_name[1])
                             keyboard = []
                             row = []
+
+                            all_images = []
+                            all_images.append(barber_name[2])
+                            print(all_images)
+
+
+                            # for i in all_barbers:
+                            #     row.append(InlineKeyboardButton(i, callback_data=str(i)))
+                            # counter = row + counter     
+                            
                             for i in all_barbers:
                                 row.append(InlineKeyboardButton(i, callback_data=str(i)))
-                            counter = row + counter
-    list_1 = [counter]
-    reply_markup = InlineKeyboardMarkup(list_1)
+                                list_1 = [row]
+                                reply_markup = InlineKeyboardMarkup(list_1)
+                                bot.send_photo(chat_id=update.callback_query.from_user.id,
+                                                photo=all_images[0],
+                                                caption='lol',
+                                                reply_markup=reply_markup)
+                                # bot.send_message(chat_id=update.callback_query.from_user.id,
+                                #                      text='Мастер: ',
+                                #                      reply_markup=reply_markup)
+                                # можно вставить между этими функциями функцию, которая чистит диалог
 
-    bot.edit_message_text(text='Выберите мастера:',
-                          chat_id=update.callback_query.from_user.id,
-                          message_id=query.message.message_id,
-                          reply_markup=reply_markup)
+
+    # list_1 = [counter]
+    # reply_markup = InlineKeyboardMarkup(list_1)
+
+    # bot.edit_message_text(text='Выберите мастера:',
+    #                       chat_id=update.callback_query.from_user.id,
+    #                       message_id=query.message.message_id,
+    #                       reply_markup=reply_markup)
+
     # Запись данных в user_data
     user_data ['service'] = query.data
     return SECOND
@@ -162,16 +186,22 @@ def choose_service(bot,update, user_data):
 def calendar(bot,update, user_data):
     # функция вызова календаря
     query = update.callback_query
-    if query == "Вова":
-        bot.edit_message_text(text='Выберите дату:',
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id,
-                          reply_markup=telegramcalendar.create_calendar_vova())
-    else:
-        bot.edit_message_text(text='Выберите дату: {}'.format(smile_5),
-                              chat_id=query.message.chat_id,
-                              message_id=query.message.message_id,
-                              reply_markup=telegramcalendar.create_calendar())
+    # bot.delete_message(chat_id=update.callback_query.from_user.id,
+    #                     message_id=query.message.message_id)
+    bot.send_message(chat_id=update.callback_query.from_user.id,
+                     text='Выберите дату: ',
+                     reply_markup=telegramcalendar.create_calendar())
+
+    # if query == "Вова":
+    #     bot.edit_message_text(text='Выберите дату:',
+    #                       chat_id=query.message.chat_id,
+    #                       message_id=query.message.message_id,
+    #                       reply_markup=telegramcalendar.create_calendar_vova())
+    # else:
+    #     bot.edit_message_text(text='Выберите дату: {}'.format(smile_5),
+    #                           chat_id=query.message.chat_id,
+    #                           message_id=query.message.message_id,
+    #                           reply_markup=telegramcalendar.create_calendar())
     user_data ['name'] = query.data
     return THIRD
 
@@ -286,20 +316,33 @@ def get_contact(bot, update, user_data):
     sql = "SELECT * FROM record_info"
     cursor.execute(sql)
     data_base = cursor.fetchall()
+
     zapis_1 = []
-        
+
     for z in data_base:
         if user_data.get('number') == z[4]:
-            # достаем время и дату
             zapis_1.extend((z[2:4]))
-        
-# блок для создание напоминалок
+
     top_zapis = (' '.join(zapis_1[0:2]))
     dates = datetime.datetime.strptime(top_zapis, "%Y-%m-%d %H:%M")
-    lolkin = timedelta(hours=0, minutes=7)
+    lolkin = timedelta(hours=6, minutes=13)
     global topcheg
     topcheg = dates + lolkin
     print(topcheg)
+
+    top_zapis_2 = (' '.join(zapis_1[2:4]))
+    dates_2 = datetime.datetime.strptime(top_zapis_2, "%Y-%m-%d %H:%M")
+    lolkin_2 = timedelta(hours=6, minutes=14)
+    global topcheg_2
+    topcheg_2 = dates_2 + lolkin_2
+    print(topcheg_2)
+
+    top_zapis_3 = (' '.join(zapis_1[4:6]))
+    dates_3 = datetime.datetime.strptime(top_zapis_3, "%Y-%m-%d %H:%M")
+    lolkin_3 = timedelta(hours=6, minutes=15)
+    global topcheg_3
+    topcheg_3 = dates_3 + lolkin_3
+    print(topcheg_3)
     
 
 def my_entry(bot, update, user_data):
@@ -388,7 +431,6 @@ def cancel_entries(bot, update, user_data, job_queue):
 
     if service == '1' and len(info_list) == 4:
         a = (info_list[0], info_list[1], info_list[2], info_list[3], user_data.get('number'))
-        print(type(a))
         cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
         user_data.clear()
         conn.commit()
@@ -405,19 +447,27 @@ def cancel_entries(bot, update, user_data, job_queue):
         cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
         conn.commit()
         #Отменяет уведомление
-        job_queue.stop()
+        if len(info_list) == 12:
+            counter[0].schedule_removal()
+        if len(info_list) == 8:
+            counter[1].schedule_removal()
+        
     elif service == '2':
         a = (info_list[4], info_list[5], info_list[6], info_list[7], user_data.get('number'))
         cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
         conn.commit()
-        #Отменяет уведомление
-        job_queue.stop()
+        # #Отменяет уведомление
+        if len(info_list) == 12:
+            counter[1].schedule_removal()
+        if len(info_list) == 8:
+            counter[2].schedule_removal()
+
     elif service == '3':
         a = (info_list[8], info_list[9], info_list[10], info_list[11], user_data.get('number'))
         cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
         conn.commit()
         #Отменяет уведомление
-        job_queue.stop()
+        counter[2].schedule_removal()
     elif service == 'Отмена':
         a = user_data.get('number')
         cursor.execute("DELETE FROM record_info WHERE number = %s" % a)
@@ -425,6 +475,7 @@ def cancel_entries(bot, update, user_data, job_queue):
         conn.commit()
         #Отменяет уведомление
         job_queue.stop()
+
         bot.delete_message(chat_id=update.callback_query.from_user.id,
                            message_id=query.message.message_id)
         bot.send_message(chat_id=update.callback_query.from_user.id,
@@ -442,18 +493,55 @@ def cancel_entries(bot, update, user_data, job_queue):
                      reply_markup=my_entry(bot, update, user_data))
 
 
-def set_alarm(bot, update, job_queue):
+def set_alarm(bot, update, job_queue, user_data):
     query = update.callback_query
-    update.message.reply_text('Уведомление будет отправлено за 1 день до события',
-                             reply_markup=start_keyboard)
-    job_queue.run_once(alarm, when=topcheg, context=update.message.chat_id)
+
+    sql = "SELECT * FROM record_info"
+    cursor.execute(sql)
+    data_base = cursor.fetchall()
+
+    vse_zapisi = []
+    
+    global info_9
+    info_9 = []
+
+    for z in data_base:
+        if user_data.get('number') == z[4]:
+            vse_zapisi.append(z[4])
+            info_9.extend((z[0:4]))
+
+    if len(vse_zapisi) == 1:
+        job_queue.run_once(alarm, when=topcheg, context=update.message.chat_id, name='lol')
+    elif len(vse_zapisi) == 2:
+        job_queue.run_once(alarm_1, when=topcheg_2, context=update.message.chat_id, name='lol')
+    elif len(vse_zapisi) == 3:
+        job_queue.run_once(alarm_2, when=topcheg_3, context=update.message.chat_id, name='lol')
+
+    global counter
+    counter = []
+# добавляет все созданные напоминания в список
+    for job in job_queue.get_jobs_by_name('lol'):
+        counter.append(job)
+
+    update.message.reply_text("Напоминание создано!",
+                              reply_markup=start_keyboard)
 
 
 @mq.queuedmessage
 def alarm(bot, job):
-    bot.send_message(chat_id=job.context, text="Сработал будильник!")
+    bot.send_message(chat_id=job.context, text=('Запись 1 ' + ', '.join(info_9[0:4])))
+    # 'Напоминаем, что Вы записаны на услугу {} к мастеру {} через 1 час!'.format(info_9[0], info_9[1])
 
-    
+@mq.queuedmessage
+def alarm_1(bot, job):
+    bot.send_message(chat_id=job.context, text=('Запись 2 ' + ', '.join(info_9[4:8])))
+
+@mq.queuedmessage
+def alarm_2(bot, job):
+    bot.send_message(chat_id=job.context, text=('Запись 3 ' + ', '.join(info_9[8:12])))
+
+
+
 
 def main():
     mybot = Updater("728852231:AAEZLnITK0BYNpAfQ4DCIC8CjpyiYLYUpIo", request_kwargs=PROXY)
@@ -485,8 +573,9 @@ def main():
     dp.add_handler(CommandHandler('Запись', choose_master, pass_user_data=True))
     dp.add_handler(RegexHandler('Запись', choose_master, pass_user_data=True))
 
-    dp.add_handler(CommandHandler("Отправить напоминание", set_alarm, pass_job_queue=True))
-    dp.add_handler(RegexHandler("Отправить напоминание", set_alarm, pass_job_queue=True))
+    dp.add_handler(CommandHandler("Отправить напоминание", set_alarm, pass_job_queue=True, pass_user_data=True))
+    dp.add_handler(RegexHandler("Отправить напоминание", set_alarm, pass_job_queue=True, pass_user_data=True))
+
 
     # dp.add_handler(CommandHandler("О нас", callback_timer))
     # dp.add_handler(RegexHandler("О нас", callback_timer))
