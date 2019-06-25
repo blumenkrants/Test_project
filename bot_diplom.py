@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, PhotoSize
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, Filters, RegexHandler
 import logging
 import mysql.connector
@@ -39,24 +39,25 @@ conn = mysql.connector.connect(host='mysql.j949396.myjino.ru',
                                password='qwerty')
 cursor = conn.cursor()
 
-smile = emojize(':heavy_plus_sign:', use_aliases=True)
-smile_2 = emojize(':ledger:', use_aliases=True)
-smile_3 = emojize(':information_source:', use_aliases=True)
-smile_4 = emojize(':x:', use_aliases=True)
-smile_5 = emojize(':calendar:', use_aliases=True)
-smile_6 = emojize(':man:', use_aliases=True)
-smile_7 = emojize(':scissors:', use_aliases=True)
-smile_8 = emojize(':clock230:', use_aliases=True)
-smile_9 = emojize(':white_check_mark:', use_aliases=True)
-smile_10 = emojize(':no_entry_sign:', use_aliases=True)
-smile_11 = emojize(':iphone:', use_aliases=True)
-smile_12 = emojize(':barber:', use_aliases=True)
-smile_13 = emojize(':leftwards_arrow_with_hook:', use_aliases=True)
+
+smiles = [emojize(':heavy_plus_sign:', use_aliases=True),
+          emojize(':ledger:', use_aliases=True),
+          emojize(':information_source:', use_aliases=True),
+          emojize(':x:', use_aliases=True),
+          emojize(':calendar:', use_aliases=True),
+          emojize(':man:', use_aliases=True),
+          emojize(':scissors:', use_aliases=True),
+          emojize(':clock230:', use_aliases=True),
+          emojize(':white_check_mark:', use_aliases=True),
+          emojize(':no_entry_sign:', use_aliases=True),
+          emojize(':leftwards_arrow_with_hook:', use_aliases=True),
+          emojize(':telephone_receiver:', use_aliases=True),
+          emojize(':star:', use_aliases=True)]
 
 
-start_keyboard = ReplyKeyboardMarkup([['Запись {}'.format(smile)],
-                                   ['Мои записи {}'.format(smile_2), 
-                                    'О нас {}'.format(smile_3)]],
+start_keyboard = ReplyKeyboardMarkup([['Запись {}'.format(smiles[0])],
+                                   ['Мои записи {}'.format(smiles[1]), 
+                                    'О нас {}'.format(smiles[2])]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
@@ -69,30 +70,38 @@ def greet_user(bot, update, user_data):
     if user_data == {}:
         text = 'Вас приветствует salon_service_bot!'
         update.message.reply_text(text, reply_markup=start_keyboard)
-        global subscribers
-        subscribers = update.message.chat_id
     else: 
         text_2 = 'Выберите дальнейшее действие'
-        my_keyboard_2 = ReplyKeyboardMarkup([['Мои записи{}'.format(smile_2)],
-                                            ['Отменить все записи{}'.format(smile_4), 
-                                             'Добавить Запись{}'.format(smile_5)]],
+        my_keyboard_2 = ReplyKeyboardMarkup([['Мои записи{}'.format(smiles[1])],
+                                            ['Отменить все записи{}'.format(smiles[3]), 
+                                             'Добавить Запись{}'.format(smiles[4])]],
                                   resize_keyboard=True,
                                   one_time_keyboard=True)
         update.message.reply_text(text_2, reply_markup=my_keyboard_2)
 
 def choose_master(bot, update, user_data):
-    # функция вызова инлайн клавиатуры с мастерами 
+    # функция вызова инлайн клавиатуры с услугами
+
+    """ Ограничение количества записей """
+    if user_data == {}:
+        pass
+    else:
+        if len(max_entries) < 3:
+            pass
+        else:
+            return update.message.reply_text('У Вас максимально возможное количество записей!',
+                                            reply_markup=ReplyKeyboardMarkup([['Мои записи {}'.format(smiles[1])]],
+                                            resize_keyboard=True,
+                                            one_time_keyboard=True))
+
+
     sql = "SELECT service_name, price FROM services"
     cursor.execute(sql)
     data_base = cursor.fetchall()
 
-    all_price = []
-    for price in data_base:
-        all_price.append(price[1])
-
-    all_masters = []
-    for masters in data_base:
-        all_masters.append(masters[0])
+    all_price = [price[1] for price in data_base]
+    all_masters = [masters[0] for masters in data_base]
+    
     keyboard = []
     row = []
     rows = []
@@ -110,14 +119,11 @@ def choose_master(bot, update, user_data):
     keyboard.append(row)
     keyboard.append(rows)
     reply_markup = InlineKeyboardMarkup(keyboard)
-    # bot.send_photo(chat_id=update.message.chat.id,
-    #                 photo="http://nibler.ru/uploads/users/11119/2015-10-14/oblakah-fakty-interesnye-_189279796.jpg")
-    #                # photo=open('C:\projects\diplom\photo\BRB 666.jpg', 'rb'))
     update.message.reply_text(info_text, reply_markup=reply_markup)
     return FIRST
 
 def choose_service(bot,update, user_data):
-    # функция вызова инлайн клавиатуры с услугами
+    # функция вызова инлайн клавиатуры с мастерами
     sql = "SELECT * FROM barbers"
     cursor.execute(sql)
     data_base = cursor.fetchall()
@@ -133,51 +139,44 @@ def choose_service(bot,update, user_data):
     query = update.callback_query
     name = query.data
 
-    # Клавиатура с услугами
+# # Выбор мастера с фото
+#     counter = []
+#     masters = [i[0] for i in data_base_2 if name in i]
+#     a = ''.join(masters)
+#     for master_id in data_base_1:
+#         if a in master_id:
+#             b = master_id[1]
+#             services = [i[1] for i in data_base if b in i]
+#             all_images = [i[2]for i in data_base if b in i]
+#             all_info = [i[3]for i in data_base if b in i]
+#             row = [InlineKeyboardButton(i, callback_data=str(i)) for i in services]
+#             list_1 = [row]
+#             reply_markup = InlineKeyboardMarkup(list_1)
+#             bot.send_photo(chat_id=update.callback_query.from_user.id,
+#                             photo=all_images[0],
+#                             caption=all_info[0],
+#                             reply_markup=reply_markup)
+
     counter = []
-    for service_id in data_base_2:
-        if name in service_id:
-            a = service_id[0] 
-            for barber_id in data_base_1:
-                if a in barber_id:
-                    b = barber_id[1]
-                    for barber_name in data_base:
-                        if b in barber_name:
-                            all_barbers = []
-                            all_barbers.append(barber_name[1])
-                            keyboard = []
-                            row = []
+    masters = [i[0] for i in data_base_2 if name in i]
+    a = ''.join(masters)
+    for master_id in data_base_1:
+        if a in master_id:
+            b = master_id[1]
+            all_barbers = [i[1] for i in data_base if b in i]
+            all_images = [i[2]for i in data_base if b in i]
+            all_info = [i[3]for i in data_base if b in i]
+            row = [InlineKeyboardButton(i, callback_data=str(i)) for i in all_barbers]
+            list_1 = [row]
+            reply_markup = InlineKeyboardMarkup(list_1)
+            bot.send_photo(chat_id=update.callback_query.from_user.id,
+                            photo=all_images[0],
+                            caption='*Мастер:* {} \n'
+                                    '*Опыт работы:* {} \n'
+                                    '*Рейтинг:* {}'.format(all_barbers[0], all_info[0], smiles[12]),
+                            parse_mode= "Markdown",
+                            reply_markup=reply_markup)
 
-                            all_images = []
-                            all_images.append(barber_name[2])
-                            print(all_images)
-
-
-                            # for i in all_barbers:
-                            #     row.append(InlineKeyboardButton(i, callback_data=str(i)))
-                            # counter = row + counter     
-                            
-                            for i in all_barbers:
-                                row.append(InlineKeyboardButton(i, callback_data=str(i)))
-                                list_1 = [row]
-                                reply_markup = InlineKeyboardMarkup(list_1)
-                                bot.send_photo(chat_id=update.callback_query.from_user.id,
-                                                photo=all_images[0],
-                                                caption='lol',
-                                                reply_markup=reply_markup)
-                                # bot.send_message(chat_id=update.callback_query.from_user.id,
-                                #                      text='Мастер: ',
-                                #                      reply_markup=reply_markup)
-                                # можно вставить между этими функциями функцию, которая чистит диалог
-
-
-    # list_1 = [counter]
-    # reply_markup = InlineKeyboardMarkup(list_1)
-
-    # bot.edit_message_text(text='Выберите мастера:',
-    #                       chat_id=update.callback_query.from_user.id,
-    #                       message_id=query.message.message_id,
-    #                       reply_markup=reply_markup)
 
     # Запись данных в user_data
     user_data ['service'] = query.data
@@ -188,7 +187,8 @@ def calendar(bot,update, user_data):
     query = update.callback_query
     bot.delete_message(chat_id=update.callback_query.from_user.id,
                         message_id=query.message.message_id)
-    bot.send_message(text='Выберите время:',
+    bot.send_message(text='*Выберите дату:*',
+                     parse_mode= "Markdown",
                         chat_id=update.callback_query.from_user.id,
                         message_id=query.message.message_id,
                         reply_markup=telegramcalendar.create_calendar())
@@ -263,15 +263,6 @@ def time(bot,update, user_data):
         keyboard.append(row_3)
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        
-        # bot.edit_message_text(text='Выберите время:',
-        #                       chat_id=update.callback_query.from_user.id,
-        #                       message_id=query.message.message_id,
-        #                       reply_markup=reply_markup)
-
-
-        # bot.delete_message(chat_id=update.callback_query.from_user.id,
-        #                 message_id=query.message.message_id)
 
 
         bot.send_message(text='Выберите время:',
@@ -338,11 +329,14 @@ def get_contact(bot, update, user_data, job_queue):
 
     global alarm_info
     alarm_info = []
+    global max_entries
+    max_entries = []
     user_entry = []
     for z in data_base:
         if user_data.get('number') == z[4]:
             alarm_info.extend((z[0:4]))
             user_entry.extend((z[2:4]))
+            max_entries.append(z[4])
 
     alert = timedelta(hours=2, minutes=30)
     alert_2 = timedelta(hours=2, minutes=31)
@@ -364,9 +358,8 @@ def get_contact(bot, update, user_data, job_queue):
         print(notify_2)
         job_queue.run_once(alarm_2, when=notify_2, context=update.message.chat_id, name='job')
 
-    global counter
-    counter = [i for i in job_queue.get_jobs_by_name('job')]
-    print(counter)
+    global job_list
+    job_list = [i for i in job_queue.get_jobs_by_name('job')]
 
     update.message.reply_text("Спасибо! \n Вы можете посмотреть информацию о своих записях в главном меню",
                               reply_markup=start_keyboard)
@@ -387,59 +380,49 @@ def alarm_2(bot, job):
 
 
 def my_entry(bot, update, user_data):
-    # функция вывод информации о записях
+    """ Вывод информации о записях """
+
     sql = "SELECT * FROM record_info"
     cursor.execute(sql)
     data_base = cursor.fetchall()
 
-    sql_2 = "SELECT * FROM services"
-    cursor.execute(sql_2)
-    data_base_2 = cursor.fetchall()
+    sql_1 = "SELECT * FROM services"
+    cursor.execute(sql_1)
+    data_base_1 = cursor.fetchall()
 
     if user_data == {}:
-        update.message.reply_text('У вас нет записей {}'.format(smile_10),
+        update.message.reply_text('У вас нет записей {}'.format(smiles[9]),
                                   reply_markup=start_keyboard)
     else:
+        global check_price
         check_price = []
-
-        row = []
-        row_1 = []
-        row_2 = []
-        all_entries = []
-        main_menu = []
-
-        info = []
-
-        keyboard = []
-
+        entries = []
         for z in data_base:
             if user_data.get('number') == z[4]:
-                info.extend((z[0:4]))
-                for m in data_base_2:
+                entries.extend((z[0:4]))
+                for m in data_base_1:
                     if z[0] in m[2]:
                         check_price.append(m[3])
         total_sum = sum(check_price[0:])
-
-        if len(info) == 4:
-            row.append(InlineKeyboardButton((', '.join(info[0:4])), callback_data='1'))
-            main_menu.append(InlineKeyboardButton('Вернуться в главное меню {}'.format(smile_13), callback_data='0'))
+        keyboard = []
+        if len(entries) == 4:
+            row = [InlineKeyboardButton((', '.join(entries[0:4])), callback_data='1')]
+            main_menu = [InlineKeyboardButton('Вернуться в главное меню {}'.format(smiles[10]), callback_data='0')]
             keyboard.extend((row, main_menu))
-        elif len(info) == 8:
-            row.append(InlineKeyboardButton((', '.join(info[0:4])), callback_data='1'))
-            row_1.append(InlineKeyboardButton((', '.join(info[4:8])), callback_data='2'))
-            all_entries.append(InlineKeyboardButton('Отменить все записи {}'.format(smile_4), callback_data='Отмена'))
-            main_menu.append(InlineKeyboardButton('Вернуться в главное меню {}'.format(smile_13), callback_data='0'))
+        elif len(entries) == 8:
+            row = [InlineKeyboardButton((', '.join(entries[0:4])), callback_data='1')]
+            row_1 = [InlineKeyboardButton((', '.join(entries[4:8])), callback_data='2')]
+            all_entries = [InlineKeyboardButton('Отменить все записи {}'.format(smiles[3]), callback_data='Отмена')]
+            main_menu = [InlineKeyboardButton('Вернуться в главное меню {}'.format(smiles[10]), callback_data='0')]
             keyboard.extend((row, row_1, all_entries, main_menu))
-        elif len(info) > 8:
-            row.append(InlineKeyboardButton((', '.join(info[0:4])), callback_data='1'))
-            row_1.append(InlineKeyboardButton((', '.join(info[4:8])), callback_data='2'))
-            row_2.append(InlineKeyboardButton((', '.join(info[8:12])), callback_data='3'))
-            all_entries.append(InlineKeyboardButton('Отменить все записи {}'.format(smile_4), callback_data='Отмена'))
-            main_menu.append(InlineKeyboardButton('Вернуться в главное меню {}'.format(smile_13), callback_data='0'))
+        elif len(entries) > 8:
+            row = [InlineKeyboardButton((', '.join(entries[0:4])), callback_data='1')]
+            row_1 = [InlineKeyboardButton((', '.join(entries[4:8])), callback_data='2')]
+            row_2 = [InlineKeyboardButton((', '.join(entries[8:12])), callback_data='3')]
+            all_entries = [InlineKeyboardButton('Отменить все записи {}'.format(smiles[3]), callback_data='Отмена')]
+            main_menu = [InlineKeyboardButton('Вернуться в главное меню {}'.format(smiles[10]), callback_data='0')]
             keyboard.extend((row, row_1, row_2, all_entries, main_menu))
-
         reply_markup = InlineKeyboardMarkup(keyboard)
-
         try:
             update.message.reply_text('Клиент: ' + user_data.get('first_name') + '\n'
                                       + '\n'
@@ -449,15 +432,21 @@ def my_entry(bot, update, user_data):
                                       'Чтобы отменить запись -  просто нажмите на нее!',
                                       reply_markup=reply_markup)
         except AttributeError:
-            bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+            bot.edit_message_text('Клиент: ' + user_data.get('first_name') + '\n'
+                                      + '\n'
+                                      'Итоговая сумма: ' + str(total_sum) + '\n'
+                                      + '\n'
+                                      'Ниже представлена краткая информация о ваших записях.' + '\n'
+                                      'Чтобы отменить запись -  просто нажмите на нее!',
+                                        chat_id=update.callback_query.message.chat_id,
                                           message_id=update.callback_query.message.message_id,
                                           reply_markup=reply_markup)
-
         return FIVE
 
 
 def cancel_entries(bot, update, user_data, job_queue):
-    # информация о записях, а также их отмена по одной
+    """ Удаление записей из базы данных и напоминаний"""
+
     query = update.callback_query
     service = query.data
 
@@ -471,62 +460,102 @@ def cancel_entries(bot, update, user_data, job_queue):
             info_list.extend((data_list[0:4]))
 
     if service == '1' and len(info_list) == 4:
-        a = (info_list[0], info_list[1], info_list[2], info_list[3], user_data.get('number'))
-        cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
-        user_data.clear()
+        info_tuple = tuple(info_list[0:4])
+        new_tuple = info_tuple + (user_data.get('number'),)
+        cursor.execute("DELETE FROM record_info WHERE"
+                       " service = %s and name = %s and date = %s and time = %s and number = %s",
+                       new_tuple)
         conn.commit()
-        #Отменяет уведомление
-        job_queue.stop()
 
+        user_data.clear()
+        max_entries.clear()
+
+        """ Удаление всех напоминаний """
+        job_queue.stop()
         bot.delete_message(chat_id=update.callback_query.from_user.id,
                            message_id=query.message.message_id)
         bot.send_message(chat_id=update.callback_query.from_user.id,
-                         text='У вас нет записей {}'.format(smile_10),
+                         text='У вас нет записей {}'.format(smiles[9]),
                          reply_markup=start_keyboard)
     elif service == '1':
-        a = (info_list[0], info_list[1], info_list[2], info_list[3], user_data.get('number'))
-        cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
+        info_tuple = tuple(info_list[0:4])
+        new_tuple = info_tuple + (user_data.get('number'),)
+        cursor.execute("DELETE FROM record_info WHERE"
+                       " service = %s and name = %s and date = %s and time = %s and number = %s",
+                       new_tuple)
         conn.commit()
-        #Отменяет уведомление
-        if len(info_list) == 12:
-            counter[0].schedule_removal()
-        if len(info_list) == 8:
-            counter[1].schedule_removal()
-        
-    elif service == '2':
-        a = (info_list[4], info_list[5], info_list[6], info_list[7], user_data.get('number'))
-        cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
-        conn.commit()
-        # #Отменяет уведомление
-        if len(counter) == 2:
-            print('убрали второй джоб и джоба было 2')
-            counter[1].schedule_removal()
 
+        max_entries.pop()
+
+        """ Удаление напоминаний """
+        if len(job_list) == 2:
+            print('убрали первый джоб и джоба было 2')
+            job_list[0].schedule_removal()
         if len(info_list) == 12:
-            counter[1].schedule_removal()
+            print('убрали первый джоб')
+            job_list[0].schedule_removal()
+        if len(info_list) == 8 and len(job_list) == 3:
             print('убрали второй джоб')
+            job_list[1].schedule_removal()
+        bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+                                      message_id=update.callback_query.message.message_id,
+                                      reply_markup=my_entry(bot, update, user_data))
+        # bot.edit_message_text(text=query.message.text,
+        #                       chat_id=query.message.chat_id,
+        #                       message_id=query.message.message_id,
+        #                       reply_markup=my_entry(bot, update, user_data))
+    elif service == '2':
+        info_tuple = tuple(info_list[4:8])
+        new_tuple = info_tuple + (user_data.get('number'),)
+        cursor.execute("DELETE FROM record_info WHERE"
+                       " service = %s and name = %s and date = %s and time = %s and number = %s",
+                       new_tuple)
+        # del check_price[1]
+        conn.commit()
+
+        max_entries.pop()
+
+        if len(job_list) == 2:
+            print('убрали второй джоб и джоба было 2')
+            job_list[1].schedule_removal()
+        if len(info_list) == 12:
+            print('убрали второй джоб')
+            job_list[1].schedule_removal()
         if len(info_list) == 8:
-            counter[2].schedule_removal()
             print('убрали третий джоб')
-
+            job_list[2].schedule_removal()
+        bot.send_message(chat_id=update.callback_query.from_user.id,
+                         text='Есть!',
+                         reply_markup=my_entry(bot, update, user_data))
     elif service == '3':
-        a = (info_list[8], info_list[9], info_list[10], info_list[11], user_data.get('number'))
-        cursor.execute("DELETE FROM record_info WHERE service = %s and name = %s and date = %s and time = %s and number = %s", a)
+        info_tuple = tuple(info_list[8:12])
+        new_tuple = info_tuple + (user_data.get('number'),)
+        cursor.execute("DELETE FROM record_info WHERE"
+                       " service = %s and name = %s and date = %s and time = %s and number = %s",
+                       new_tuple)
         conn.commit()
-        #Отменяет уведомление
-        counter[2].schedule_removal()
-    elif service == 'Отмена':
-        a = user_data.get('number')
-        cursor.execute("DELETE FROM record_info WHERE number = %s" % a)
-        user_data.clear()
-        conn.commit()
-        #Отменяет уведомление
-        job_queue.stop()
 
+        max_entries.pop()
+
+        if len(info_list) == 12:
+            print('убрали третий джоб')
+            job_list[2].schedule_removal()
+        bot.send_message(chat_id=update.callback_query.from_user.id,
+                         text='Есть!',
+                         reply_markup=my_entry(bot, update, user_data))
+    elif service == 'Отмена':
+        info_tuple = user_data.get('number')
+        cursor.execute("DELETE FROM record_info WHERE number = %s" % info_tuple)
+
+        user_data.clear()
+        max_entries.clear()
+
+        conn.commit()
+        job_queue.stop()
         bot.delete_message(chat_id=update.callback_query.from_user.id,
                            message_id=query.message.message_id)
         bot.send_message(chat_id=update.callback_query.from_user.id,
-                         text='У вас нет записей {}'.format(smile_10),
+                         text='У вас нет записей {}'.format(smiles[9]),
                          reply_markup=start_keyboard)
     elif service == '0':
         bot.delete_message(chat_id=update.callback_query.from_user.id,
@@ -534,44 +563,6 @@ def cancel_entries(bot, update, user_data, job_queue):
         bot.send_message(chat_id=update.callback_query.from_user.id,
                          text='Вы вернулись в главное меню',
                          reply_markup=start_keyboard)
-
-    bot.send_message(chat_id=update.callback_query.from_user.id,
-                     text='Есть!',
-                     reply_markup=my_entry(bot, update, user_data))
-
-
-# def set_alarm(bot, update, job_queue, user_data):
-#     query = update.callback_query
-
-#     sql = "SELECT * FROM record_info"
-#     cursor.execute(sql)
-#     data_base = cursor.fetchall()
-
-#     vse_zapisi = []
-    
-#     global info_9
-#     info_9 = []
-
-#     for z in data_base:
-#         if user_data.get('number') == z[4]:
-#             vse_zapisi.append(z[4])
-#             info_9.extend((z[0:4]))
-
-#     if len(vse_zapisi) == 1:
-#         job_queue.run_once(alarm, when=topcheg, context=update.message.chat_id, name='lol')
-#     elif len(vse_zapisi) == 2:
-#         job_queue.run_once(alarm_1, when=topcheg_2, context=update.message.chat_id, name='lol')
-#     elif len(vse_zapisi) == 3:
-#         job_queue.run_once(alarm_2, when=topcheg_3, context=update.message.chat_id, name='lol')
-
-#     global counter
-#     counter = []
-# # добавляет все созданные напоминания в список
-#     for job in job_queue.get_jobs_by_name('lol'):
-#         counter.append(job)
-
-#     update.message.reply_text("Напоминание создано!",
-#                               reply_markup=start_keyboard)
 
 
 
@@ -605,10 +596,6 @@ def main():
 
     dp.add_handler(CommandHandler('Запись', choose_master, pass_user_data=True))
     dp.add_handler(RegexHandler('Запись', choose_master, pass_user_data=True))
-
-    # dp.add_handler(CommandHandler("Отправить напоминание", set_alarm, pass_job_queue=True, pass_user_data=True))
-    # dp.add_handler(RegexHandler("Отправить напоминание", set_alarm, pass_job_queue=True, pass_user_data=True))
-
 
     # dp.add_handler(CommandHandler("О нас", callback_timer))
     # dp.add_handler(RegexHandler("О нас", callback_timer))
